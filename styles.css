@@ -601,8 +601,18 @@ body {
 
     #calculator {
         max-width: none;
-        min-height: auto;
-        padding: 1.15rem;
+        min-height: 26rem;
+        padding: 1.25rem;
+        gap: 0.65rem;
+        grid-template-rows: auto repeat(4, minmax(4rem, 1fr));
+    }
+
+    #calculator .button {
+        min-height: 4rem;
+    }
+
+    #result {
+        min-height: 3.75rem;
     }
 
     #history-box {
