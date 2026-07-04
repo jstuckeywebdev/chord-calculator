@@ -161,7 +161,8 @@ function display(displayValue) {
         return;
     }
 
-    resultEl.value = tokens.length ? currentValue + displayValue : note;
+    const displayNote = displayValue.trim().toUpperCase();
+    resultEl.value = tokens.length ? currentValue + ' ' + displayNote : displayNote;
 }
 
 function backspace() {
