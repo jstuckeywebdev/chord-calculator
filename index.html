@@ -3,23 +3,27 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="theme-color" content="#0c0c10">
+        <meta name="theme-color" content="#0b0d17">
         <title>Chord Calculator</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="styles.css?v=2">
+        <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="styles.css?v=5">
     </head>
     <body>
 
+        <div class="aurora" aria-hidden="true">
+            <div class="aurora-blob aurora-blob--1"></div>
+            <div class="aurora-blob aurora-blob--2"></div>
+            <div class="aurora-blob aurora-blob--3"></div>
+        </div>
+
         <header id="header">
             <div class="header-inner">
-                <div class="header-brand">
-                    <span class="header-icon" aria-hidden="true">♫</span>
-                    <div>
-                        <h1>Chord Calculator</h1>
-                        <p>Enter up to six notes — lowest note first</p>
-                    </div>
+                <div class="logo-mark">CC</div>
+                <div class="header-text">
+                    <h1>Chord Calculator</h1>
+                    <p>Enter up to six notes — lowest note first</p>
                 </div>
             </div>
         </header>
@@ -28,6 +32,7 @@
 
             <aside id="side-bar">
                 <div id="note-section" class="panel">
+                    <span class="panel-tag">Guide</span>
                     <h3>Notes</h3>
                     <ul class="note-list">
                         <li>This calculator currently does not support double flats or double sharps.</li>
@@ -37,6 +42,7 @@
                 </div>
 
                 <form id="contact-form" class="panel" action="mailto:josephtstuckey@gmail.com" method="post" enctype="text/plain">
+                    <span class="panel-tag">Reach out</span>
                     <h3>Contact Us</h3>
                     <input type="text" id="name" name="name" placeholder="Your name" required>
                     <input type="email" id="email" name="email" placeholder="Your email" required>
@@ -45,7 +51,7 @@
                 </form>
             </aside>
 
-            <section id="calculator" class="panel" aria-label="Chord calculator keypad">
+            <section id="calculator" class="panel panel-main" aria-label="Chord calculator keypad">
                 <input type="text" id="result" class="display-box" placeholder="Lowest note first" disabled>
                 <input type="button" accessKey="a" value="A" class="button note" id="a" onclick="display(' A')">
                 <input type="button" accessKey="b" value="B" class="button note" id="b" onclick="display(' B')">
@@ -69,32 +75,6 @@
                 <input type="button" class="button operation-button" name="clear_history" id="clear_history" value="Clear History" onclick="clearHistory()">
             </section>
         </main>
-
-        <footer>
-            <div id="footer-container">
-                <div id="footer-left">
-                    <form action="https://www.paypal.com/donate" method="post" target="_top" id="donate">
-                        <input type="hidden" name="business" value="34TJSK297F2CL">
-                        <input type="hidden" name="no_recurring" value="0">
-                        <input type="hidden" name="currency_code" value="USD">
-                        <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button">
-                        <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
-                    </form>
-                </div>
-                <div id="footer-right">
-                    <div class="hit-counter">
-                        <p>Unique</p>
-                        <a href="https://www.hitwebcounter.com" target="_blank"></a>
-                        <img src="https://hitwebcounter.com/counter/counter.php?page=8042452&style=0008&nbdigits=5&type=ip&initCount=0" title="Free Counter" alt="web counter" border="0">
-                    </div>
-                    <div class="hit-counter">
-                        <p>Total</p>
-                        <a href="https://www.hitwebcounter.com" target="_blank"></a>
-                        <img src="https://hitwebcounter.com/counter/counter.php?page=8042454&style=0008&nbdigits=5&type=page&initCount=0" title="Free Counter" alt="web counter" border="0">
-                    </div>
-                </div>
-            </div>
-        </footer>
 
         <script src="https://smtpjs.com/v3/smtp.js"></script>
         <script type="text/javascript" src="script.js"></script>
