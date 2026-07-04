@@ -53,960 +53,587 @@ const minor3 = 3;
 const major3 = 4;
 const perfect4 = 5;
 const tritone = 6;
-const perfect5= 7;
-const augmented5 = 8;
+const perfect5 = 7;
 const minor6 = 8;
 const major6 = 9;
 const minor7 = 10;
 const major7 = 11;
 
-let chord_found = false;
+const MAX_NOTES = 6;
 
-// This function clear all the values
+const ROOT_TO_KEY = {
+    'c': key_c, 'b#': key_c,
+    'g': key_g,
+    'd': key_d,
+    'a': key_a,
+    'e': key_e, 'f♭': key_e,
+    'b': key_b, 'c♭': key_b,
+    'g♭': key_gb, 'f#': key_gb,
+    'd♭': key_db, 'c#': key_db,
+    'a♭': key_ab, 'g#': key_ab,
+    'e♭': key_eb, 'd#': key_eb,
+    'b♭': key_bb, 'a#': key_bb,
+    'f': key_f, 'e#': key_f,
+};
+
+const CHORD_HANDLERS = {
+    2: two_notes,
+    3: three_notes,
+    4: four_notes,
+    5: five_notes,
+    6: six_notes,
+};
+
+let resultEl;
+let historyListEl;
+
+const state = {
+    showingResult: false,
+};
+
+function getKeySignature(rootNote) {
+    return ROOT_TO_KEY[rootNote.toLowerCase()] ?? null;
+}
+
+function parseNotes(value) {
+    return value.trim().split(/\s+/).filter(Boolean);
+}
+
+function getIntervals(keySig, notes) {
+    const rootValue = keySig[notes[0].toLowerCase()];
+    if (rootValue === undefined) {
+        return null;
+    }
+
+    const intervals = [];
+    for (let i = 1; i < notes.length; i++) {
+        const noteValue = keySig[notes[i].toLowerCase()];
+        if (noteValue === undefined) {
+            return null;
+        }
+        intervals.push(noteValue - rootValue);
+    }
+    return intervals;
+}
+
+function normalizeNotes(notes) {
+    return notes.map((note) => note.toLowerCase());
+}
+
+function addToHistory(originalNotes, result) {
+    const entry = document.createElement('p');
+    entry.textContent = originalNotes.toUpperCase() + ' = ' + result;
+    historyListEl.prepend(entry);
+}
+
+function showResult(message) {
+    resultEl.value = message;
+    state.showingResult = true;
+}
+
 function clearScreen() {
-    document.getElementById("result").value = "";
+    resultEl.value = '';
+    state.showingResult = false;
 }
 
-// This function display values
-function display(display_value) {
-    let value_no_space = display_value.substring(1);
-    
-    //clear screen if chord name is already displayed
-    if(chord_found == true){
+function display(displayValue) {
+    if (state.showingResult) {
         clearScreen();
-        chord_found = false;
     }
 
-    //display value and delete first character if it is a space
-    if(document.getElementById('result').value.includes(value_no_space) == false) {
-        document.getElementById("result").value += display_value;
-        if (document.getElementById("result").value.charAt(0) == ' ') {
-            document.getElementById("result").value = document.getElementById("result").value.substring(1);
+    const currentValue = resultEl.value;
+
+    if (displayValue === '♭' || displayValue === '#') {
+        if (!currentValue.length || currentValue.endsWith(displayValue)) {
+            return;
         }
+        resultEl.value = currentValue + displayValue;
+        return;
     }
 
-    if(document.getElementById('result').value.length !== 0 && display_value == '♭' && document.getElementById('result').value.charAt(document.getElementById('result').value.length - 1) !== display_value) {
-        document.getElementById("result").value += display_value;
+    const note = displayValue.trim().toLowerCase();
+    if (!note) {
+        return;
     }
 
-    if(document.getElementById('result').value.length !== 0 && display_value == '#' && document.getElementById('result').value.charAt(document.getElementById('result').value.length - 1) !== display_value) {
-        document.getElementById("result").value += display_value;
+    const tokens = parseNotes(currentValue).map((token) => token.toLowerCase());
+    if (tokens.includes(note) || tokens.length >= MAX_NOTES) {
+        return;
     }
+
+    resultEl.value = tokens.length ? currentValue + displayValue : note;
 }
 
-//This function deletes the last character entered
 function backspace() {
-    document.getElementById('result').value = document.getElementById('result').value.slice(0,-1);
-    
-    if(document.getElementById('result').value.charAt(document.getElementById('result').value.length - 1) == ' ') {
-        document.getElementById('result').value = document.getElementById('result').value.slice(0,-1);
-    }
-    
-}
-
-// This function evaluates the expression and returns result
-function calculate() {
-    if(chord_found == false)
-    {
-        var notes_in_chord = document.getElementById("result").value.split(" ");
-        switch (notes_in_chord.length){
-            case 0:
-                document.getElementById('result').value = "Enter 2 or more notes";
-                chord_found = true;
-                break;
-            case 1:
-                document.getElementById('result').value = "Enter 2 or more notes";
-                chord_found = true;
-                break;
-            case 2:
-                document.getElementById('result').value = two_notes(notes_in_chord);
-                display_history(input_history);
-                break;
-            case 3:
-                document.getElementById('result').value = three_notes(notes_in_chord);
-                display_history(input_history);
-                break;
-            case 4:
-                document.getElementById('result').value = four_notes(notes_in_chord);
-                display_history(input_history);
-                break;
-            case 5:
-                document.getElementById('result').value = five_notes(notes_in_chord);
-                display_history(input_history);
-                break;
-            case 6:
-                document.getElementById('result').value = six_notes(notes_in_chord);
-                display_history(input_history);
-                break;
-            case 7:
-                document.getElementById('result').value = seven_notes(notes_in_chord);
-                display_history(input_history);
-                break;
-        }
-    } else {
+    if (state.showingResult) {
         clearScreen();
+        return;
     }
+
+    let value = resultEl.value.slice(0, -1);
+    if (value.endsWith(' ')) {
+        value = value.slice(0, -1);
+    }
+    resultEl.value = value;
 }
 
-//This function calculates the interval based off of two notes
+function calculate() {
+    if (state.showingResult) {
+        clearScreen();
+        return;
+    }
+
+    const notes = parseNotes(resultEl.value);
+    const originalLabel = notes.join(' ');
+
+    if (notes.length < 2) {
+        showResult('Enter 2 or more notes');
+        return;
+    }
+
+    if (notes.length > MAX_NOTES) {
+        showResult('Enter up to 6 notes');
+        return;
+    }
+
+    const handler = CHORD_HANDLERS[notes.length];
+    const result = handler(notes);
+    addToHistory(originalLabel, result);
+    showResult(result);
+}
+
 function two_notes(notes) {
-    let int_in_chord = [];
+    const normalized = normalizeNotes(notes);
+    const keySig = getKeySignature(normalized[0]);
+    if (!keySig) {
+        return 'Invalid note';
+    }
+
+    const int_in_chord = getIntervals(keySig, normalized);
+    if (!int_in_chord) {
+        return 'Invalid note';
+    }
+
     let result;
-    let note1 = notes[0].toLowerCase();
-    let note2 = notes[1].toLowerCase();
-    let key_sig;
-    let notes_str = notes.toString();
 
-    for (let i=0; i < notes.length; i++){
-        notes[i] = notes[i].toLowerCase();
-    }
+    if(int_in_chord.includes(minor2)){
+                result = 'Minor 2nd (♭2)';
+            } else if(int_in_chord.includes(major2)){
+                result = 'Major 2nd (2)';
+            } else if(int_in_chord.includes(minor3)){
+                result = 'Minor 3rd (♭3)';
+            } else if(int_in_chord.includes(major3)){
+                result = 'Major 3rd (3)';
+            } else if(int_in_chord.includes(perfect4)){
+                result = 'Perfect 4th (4)';
+            } else if(int_in_chord.includes(tritone)){
+                result = 'Tri-tone (#4/♭5)';
+            } else if(int_in_chord.includes(perfect5)){
+                result = 'Perfect 5th (5)';
+            } else if(int_in_chord.includes(minor6)){
+                result = 'Minor 6th (♭6)';
+            } else if(int_in_chord.includes(major6)){
+                result = 'Major 6 (6)';
+            } else if(int_in_chord.includes(minor7)){
+                result = 'Minor 7th (♭7)';
+            } else if(int_in_chord.includes(major7)){
+                result = 'Major 7th (7)';
+            } else {
+                result = 'Not Found';
+            }
 
-    switch(notes[0]) {
-        case 'c':
-            key_sig = key_c;
-            break;
-        case 'b#':
-            key_sig = key_c;
-            break;
-        case 'g':
-            key_sig = key_g;
-            break;
-        case 'd':
-            key_sig = key_d;
-            break;
-        case 'a':
-            key_sig = key_a;
-            break;
-        case 'e':
-            key_sig = key_e;
-            break;
-        case 'f♭':
-            key_sig = key_e;
-            break;
-        case 'b':
-            key_sig = key_b;
-            break;
-        case 'c♭':
-            key_sig = key_b;
-            break;
-        case 'g♭':
-            key_sig = key_gb;
-            break;
-        case 'f#':
-            key_sig = key_gb;
-            break;
-        case 'd♭':
-            key_sig = key_db;
-            break;
-        case 'c#':
-            key_sig = key_db;
-            break;
-        case 'a♭':
-            key_sig = key_ab;
-            break;
-        case 'g#':
-            key_sig = key_ab;
-            break;
-        case 'e♭':
-            key_sig = key_eb;
-            break;
-        case 'd#':
-            key_sig = key_eb;
-            break;
-        case 'b♭':
-            key_sig = key_bb;
-            break;
-        case 'a#':
-            key_sig = key_bb;
-            break;
-        case 'f':
-            key_sig = key_f;
-            break;
-        case 'e#':
-            key_sig = key_f;
-            break;
-    }
-
-    while (chord_found == false) {
-        let num_note1 = key_sig[note1];
-        let num_note2 = key_sig[note2];
-        let int1and2 = num_note2 - num_note1;
-
-        int_in_chord.push(int1and2);
-
-        if(int_in_chord.includes(minor2)){
-            chord_found = true;
-            result = 'Minor 2nd (♭2)';
-        } else if(int_in_chord.includes(major2)){
-            chord_found = true;
-            result = 'Major 2nd (2)';
-        } else if(int_in_chord.includes(minor3)){
-            chord_found = true;
-            result = 'Minor 3rd (♭3)';
-        } else if(int_in_chord.includes(major3)){
-            chord_found = true;
-            result = 'Major 3rd (3)';
-        } else if(int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = 'Perfect 4th (4)';
-        } else if(int_in_chord.includes(tritone)){
-            chord_found = true;
-            result = 'Tri-tone (#4/♭5)';
-        } else if(int_in_chord.includes(perfect5)){
-            chord_found = true;
-            result = 'Perfect 5th (5)';
-        } else if(int_in_chord.includes(minor6)){
-            chord_found = true;
-            result = 'Minor 6th (♭6)';
-        } else if(int_in_chord.includes(major6)){
-            chord_found = true;
-            result = 'Major 6 (6)';
-        } else if(int_in_chord.includes(minor7)){
-            chord_found = true;
-            result = 'Minor 7th (♭7)';
-        } else if(int_in_chord.includes(major7)){
-            chord_found = true;
-            result = 'Major 7th (7)';
-        } else {
-            chord_found = true;
-            result = 'Not Found';
-        }
-    }
-    
-    //display history
-    let input_and_result = document.createElement('p');
-    notes_str = notes_str.toUpperCase();
-    let result_str = result.toString();
-    notes_str = notes_str.replaceAll(',', ' ');
-    input_and_result.innerHTML = notes_str + ' = ' + result_str;
-    document.getElementById('history').insertBefore(input_and_result, document.getElementById('history').children[2]);
     return result;
 }
 
-//This function calculates the chord based off of three notes
 function three_notes(notes) {
-    let int_in_chord = [];
+    const working = normalizeNotes(notes);
     let result = 'Not Found';
     let tries = 0;
-    let key_sig;
-    let notes_str = notes.toString();
+    let found = false;
 
-    for (let i=0; i < notes.length; i++){
-        notes[i] = notes[i].toLowerCase();
-    }
-
-    while (chord_found == false){
-        let note1 = notes[0].toLowerCase();
-        let note2 = notes[1].toLowerCase();
-        let note3 = notes[2].toLowerCase();
-
-        switch(notes[0]) {
-            case 'c':
-                key_sig = key_c;
-                break;
-            case 'b#':
-                key_sig = key_c;
-                break;
-            case 'g':
-                key_sig = key_g;
-                break;
-            case 'd':
-                key_sig = key_d;
-                break;
-            case 'a':
-                key_sig = key_a;
-                break;
-            case 'e':
-                key_sig = key_e;
-                break;
-            case 'f♭':
-                key_sig = key_e;
-                break;
-            case 'b':
-                key_sig = key_b;
-                break;
-            case 'c♭':
-                key_sig = key_b;
-                break;
-            case 'g♭':
-                key_sig = key_gb;
-                break;
-            case 'f#':
-                key_sig = key_gb;
-                break;
-            case 'd♭':
-                key_sig = key_db;
-                break;
-            case 'c#':
-                key_sig = key_db;
-                break;
-            case 'a♭':
-                key_sig = key_ab;
-                break;
-            case 'g#':
-                key_sig = key_ab;
-                break;
-            case 'e♭':
-                key_sig = key_eb;
-                break;
-            case 'd#':
-                key_sig = key_eb;
-                break;
-            case 'b♭':
-                key_sig = key_bb;
-                break;
-            case 'a#':
-                key_sig = key_bb;
-                break;
-            case 'f':
-                key_sig = key_f;
-                break;
-            case 'e#':
-                key_sig = key_f;
-                break;
+    while (!found) {
+        const keySig = getKeySignature(working[0]);
+        if (!keySig) {
+            return 'Invalid note';
         }
 
-        var num_note1 = key_sig[note1];
-        var num_note2 = key_sig[note2];
-        var num_note3 = key_sig[note3];
-        var int1and2 = num_note2 - num_note1;
-        var int1and3 = num_note3 - num_note1;
-
-        int_in_chord.push(int1and2, int1and3);
+        const int_in_chord = getIntervals(keySig, working);
+        if (!int_in_chord) {
+            return 'Invalid note';
+        }
 
         if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5)){
-            chord_found = true;
-            result = note1.toUpperCase();
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(major7)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj7 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm7 (no 5th)';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7)){
-            chord_found = true;
-            result = note1.toUpperCase() + '7 (no 5th)';
-        } else if(int_in_chord.includes(major2) && int_in_chord.includes(perfect5)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'sus2';
-        } else if(int_in_chord.includes(perfect4) && int_in_chord.includes(perfect5)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'sus4';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(tritone)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'dim';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'aug';
-        } else {
-            int_in_chord = [];
-            notes.push(notes.shift());
-            tries++;
-            if(tries == notes.length) {
-                chord_found = true;
-            }
-        }
+                    found = true;
+                    result = working[0].toUpperCase() + 'm';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5)){
+                    found = true;
+                    result = working[0].toUpperCase();
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(major7)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj7 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm7 (no 5th)';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7)){
+                    found = true;
+                    result = working[0].toUpperCase() + '7 (no 5th)';
+                } else if(int_in_chord.includes(major2) && int_in_chord.includes(perfect5)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'sus2';
+                } else if(int_in_chord.includes(perfect4) && int_in_chord.includes(perfect5)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'sus4';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(tritone)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'dim';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'aug';
+                } else {
+                    working.push(working.shift());
+                    tries++;
+                    if (tries >= working.length) {
+                        found = true;
+                    }
+                }
     }
 
-    //display history
-    let input_and_result = document.createElement('p');
-    notes_str = notes_str.toUpperCase();
-    let result_str = result.toString();
-    notes_str = notes_str.replaceAll(',', ' ');
-    input_and_result.innerHTML = notes_str + ' = ' + result_str;
-    document.getElementById('history').insertBefore(input_and_result, document.getElementById('history').children[2]);
-    
     return result;
 }
 
-//This function calculates the chord based off of four notes
 function four_notes(notes) {
-    let int_in_chord = [];
+    const working = normalizeNotes(notes);
     let result = 'Not Found';
     let tries = 0;
-    let key_sig;
-    let notes_str = notes.toString();
+    let found = false;
 
-    for (let i=0; i < notes.length; i++){
-        notes[i] = notes[i].toLowerCase();
-    }
-
-    while (chord_found == false){
-        let note1 = notes[0].toLowerCase();
-        let note2 = notes[1].toLowerCase();
-        let note3 = notes[2].toLowerCase();
-        let note4 = notes[3].toLowerCase();
-
-        switch(notes[0]) {
-            case 'c':
-                key_sig = key_c;
-                break;
-            case 'b#':
-                key_sig = key_c;
-                break;
-            case 'g':
-                key_sig = key_g;
-                break;
-            case 'd':
-                key_sig = key_d;
-                break;
-            case 'a':
-                key_sig = key_a;
-                break;
-            case 'e':
-                key_sig = key_e;
-                break;
-            case 'f♭':
-                key_sig = key_e;
-                break;
-            case 'b':
-                key_sig = key_b;
-                break;
-            case 'c♭':
-                key_sig = key_b;
-                break;
-            case 'g♭':
-                key_sig = key_gb;
-                break;
-            case 'f#':
-                key_sig = key_gb;
-                break;
-            case 'd♭':
-                key_sig = key_db;
-                break;
-            case 'c#':
-                key_sig = key_db;
-                break;
-            case 'a♭':
-                key_sig = key_ab;
-                break;
-            case 'g#':
-                key_sig = key_ab;
-                break;
-            case 'e♭':
-                key_sig = key_eb;
-                break;
-            case 'd#':
-                key_sig = key_eb;
-                break;
-            case 'b♭':
-                key_sig = key_bb;
-                break;
-            case 'a#':
-                key_sig = key_bb;
-                break;
-            case 'f':
-                key_sig = key_f;
-                break;
-            case 'e#':
-                key_sig = key_f;
-                break;
+    while (!found) {
+        const keySig = getKeySignature(working[0]);
+        if (!keySig) {
+            return 'Invalid note';
         }
 
-        var num_note1 = key_sig[note1];
-        var num_note2 = key_sig[note2];
-        var num_note3 = key_sig[note3];
-        var num_note4 = key_sig[note4];
-        var int1and2 = num_note2 - num_note1;
-        var int1and3 = num_note3 - num_note1;
-        var int1and4 = num_note4 - num_note1;
-
-        int_in_chord.push(int1and2, int1and3, int1and4);
+        const int_in_chord = getIntervals(keySig, working);
+        if (!int_in_chord) {
+            return 'Invalid note';
+        }
 
         if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm7';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj7';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor6) && int_in_chord.includes(major7)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj7#5';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor6) && int_in_chord.includes(minor7)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min7#5';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7)){
-            chord_found = true;
-            result = note1.toUpperCase() + '7';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor6) && int_in_chord.includes(minor7)){
-            chord_found = true;
-            result = note1.toUpperCase() + '7#5';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(tritone) && int_in_chord.includes(minor7)){
-            chord_found = true;
-            result = note1.toUpperCase() + '7♭5';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min/maj7';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'add2';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm add2';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(tritone) && int_in_chord.includes(minor7)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm7♭5';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(tritone) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'dim7';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'add4';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm add4';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm6';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + '6';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(major7) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj9 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm9 (no 5th)';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + '9 (no 5th)';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7) && int_in_chord.includes(minor3)){
-            chord_found = true;
-            result = note1.toUpperCase() + '7#9 (no 5th)';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + '11 (no 5th)';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7) && int_in_chord.includes(tritone)){
-            chord_found = true;
-            result = note1.toUpperCase() + '7#11 (no 5th)';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + '13 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major7) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min/maj9 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min/maj11 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major7) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min/maj13 (no 5th)';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(major6) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + '6/9 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major6) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm6/9 (no 5th)';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj11 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm11 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm13 (no 5th)';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(major7) && int_in_chord.includes(tritone)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj7#11 (no 5th)';
-
-        } else {
-            int_in_chord = [];
-            notes.push(notes.shift());
-            tries++;
-            if(tries == notes.length) {
-                chord_found = true;
-            }
-        }
+                    found = true;
+                    result = working[0].toUpperCase() + 'm7';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj7';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor6) && int_in_chord.includes(major7)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj7#5';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor6) && int_in_chord.includes(minor7)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min7#5';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7)){
+                    found = true;
+                    result = working[0].toUpperCase() + '7';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor6) && int_in_chord.includes(minor7)){
+                    found = true;
+                    result = working[0].toUpperCase() + '7#5';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(tritone) && int_in_chord.includes(minor7)){
+                    found = true;
+                    result = working[0].toUpperCase() + '7♭5';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min/maj7';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'add2';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm add2';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(tritone) && int_in_chord.includes(minor7)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm7♭5';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(tritone) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'dim7';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'add4';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm add4';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm6';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + '6';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(major7) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj9 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm9 (no 5th)';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + '9 (no 5th)';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7) && int_in_chord.includes(minor3)){
+                    found = true;
+                    result = working[0].toUpperCase() + '7#9 (no 5th)';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + '11 (no 5th)';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7) && int_in_chord.includes(tritone)){
+                    found = true;
+                    result = working[0].toUpperCase() + '7#11 (no 5th)';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + '13 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major7) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min/maj9 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min/maj11 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major7) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min/maj13 (no 5th)';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(major6) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + '6/9 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major6) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm6/9 (no 5th)';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj11 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm11 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm13 (no 5th)';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(major7) && int_in_chord.includes(tritone)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj7#11 (no 5th)';
+        
+                } else {
+                    working.push(working.shift());
+                    tries++;
+                    if (tries >= working.length) {
+                        found = true;
+                    }
+                }
     }
-    //display history
-    let input_and_result = document.createElement('p');
-    notes_str = notes_str.toUpperCase();
-    let result_str = result.toString();
-    notes_str = notes_str.replaceAll(',', ' ');
-    input_and_result.innerHTML = notes_str + ' = ' + result_str;
-    document.getElementById('history').insertBefore(input_and_result, document.getElementById('history').children[2]);
 
     return result;
 }
 
-//This function calculates the chord based off of five notes
 function five_notes(notes) {
-    let int_in_chord = [];
+    const working = normalizeNotes(notes);
     let result = 'Not Found';
     let tries = 0;
-    let key_sig;
-    let notes_str = notes.toString();
+    let found = false;
 
-
-    for (let i=0; i < notes.length; i++){
-        notes[i] = notes[i].toLowerCase();
-    }
-
-    while (chord_found == false){
-        let note1 = notes[0].toLowerCase();
-        let note2 = notes[1].toLowerCase();
-        let note3 = notes[2].toLowerCase();
-        let note4 = notes[3].toLowerCase();
-        let note5 = notes[4].toLowerCase();
-
-        switch(notes[0]) {
-            case 'c':
-                key_sig = key_c;
-                break;
-            case 'b#':
-                key_sig = key_c;
-                break;
-            case 'g':
-                key_sig = key_g;
-                break;
-            case 'd':
-                key_sig = key_d;
-                break;
-            case 'a':
-                key_sig = key_a;
-                break;
-            case 'e':
-                key_sig = key_e;
-                break;
-            case 'f♭':
-                key_sig = key_e;
-                break;
-            case 'b':
-                key_sig = key_b;
-                break;
-            case 'c♭':
-                key_sig = key_b;
-                break;
-            case 'g♭':
-                key_sig = key_gb;
-                break;
-            case 'f#':
-                key_sig = key_gb;
-                break;
-            case 'd♭':
-                key_sig = key_db;
-                break;
-            case 'c#':
-                key_sig = key_db;
-                break;
-            case 'a♭':
-                key_sig = key_ab;
-                break;
-            case 'g#':
-                key_sig = key_ab;
-                break;
-            case 'e♭':
-                key_sig = key_eb;
-                break;
-            case 'd#':
-                key_sig = key_eb;
-                break;
-            case 'b♭':
-                key_sig = key_bb;
-                break;
-            case 'a#':
-                key_sig = key_bb;
-                break;
-            case 'f':
-                key_sig = key_f;
-                break;
-            case 'e#':
-                key_sig = key_f;
-                break;
+    while (!found) {
+        const keySig = getKeySignature(working[0]);
+        if (!keySig) {
+            return 'Invalid note';
         }
 
-        var num_note1 = key_sig[note1];
-        var num_note2 = key_sig[note2];
-        var num_note3 = key_sig[note3];
-        var num_note4 = key_sig[note4];
-        var num_note5 = key_sig[note5];
-        var int1and2 = num_note2 - num_note1;
-        var int1and3 = num_note3 - num_note1;
-        var int1and4 = num_note4 - num_note1;
-        var int1and5 = num_note5 - num_note1;
-
-        int_in_chord.push(int1and2, int1and3, int1and4, int1and5);
+        const int_in_chord = getIntervals(keySig, working);
+        if (!int_in_chord) {
+            return 'Invalid note';
+        }
 
         if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm9';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj9';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + '9';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(minor6)){
-            chord_found = true;
-            result = note1.toUpperCase() + '9#5';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(tritone) && int_in_chord.includes(minor7) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + '9♭5';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(minor2)){
-            chord_found = true;
-            result = note1.toUpperCase() + '7♭9';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(minor3)){
-            chord_found = true;
-            result = note1.toUpperCase() + '7#9';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + '11';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(tritone)){
-            chord_found = true;
-            result = note1.toUpperCase() + '7#11';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor6) && int_in_chord.includes(minor7) && int_in_chord.includes(minor3)){
-            chord_found = true;
-            result = note1.toUpperCase() + '7#5#9';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(tritone) && int_in_chord.includes(minor7) && int_in_chord.includes(minor3)){
-            chord_found = true;
-            result = note1.toUpperCase() + '7♭5#9';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor6) && int_in_chord.includes(minor7) && int_in_chord.includes(minor2)){
-            chord_found = true;
-            result = note1.toUpperCase() + '7#5♭9';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(tritone) && int_in_chord.includes(minor7) && int_in_chord.includes(minor2)){
-            chord_found = true;
-            result = note1.toUpperCase() + '7♭5♭9';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + '13';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min/maj9';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min/maj11';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min/maj13';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major6) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + '6/9';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major6) && int_in_chord.includes(major2)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm6/9';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj11';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm11';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm13';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(tritone)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj7#11';
-        }  else if(int_in_chord.includes(major3) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj13 (no 5th)';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj11 (no 5th)';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + '11 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min/maj11 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min/maj13 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min/maj13 (no 5th)';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj13 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm11 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7) && int_in_chord.includes(major2) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm13 (no 5th)';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7) && int_in_chord.includes(perfect4) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm13';
-
-        } else {
-            int_in_chord = [];
-            notes.push(notes.shift());
-            tries++;
-            if(tries == notes.length) {
-                chord_found = true;
-            }
-        }
+                    found = true;
+                    result = working[0].toUpperCase() + 'm9';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj9';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + '9';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(minor6)){
+                    found = true;
+                    result = working[0].toUpperCase() + '9#5';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(tritone) && int_in_chord.includes(minor7) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + '9♭5';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(minor2)){
+                    found = true;
+                    result = working[0].toUpperCase() + '7♭9';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(minor3)){
+                    found = true;
+                    result = working[0].toUpperCase() + '7#9';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + '11';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(tritone)){
+                    found = true;
+                    result = working[0].toUpperCase() + '7#11';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor6) && int_in_chord.includes(minor7) && int_in_chord.includes(minor3)){
+                    found = true;
+                    result = working[0].toUpperCase() + '7#5#9';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(tritone) && int_in_chord.includes(minor7) && int_in_chord.includes(minor3)){
+                    found = true;
+                    result = working[0].toUpperCase() + '7♭5#9';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor6) && int_in_chord.includes(minor7) && int_in_chord.includes(minor2)){
+                    found = true;
+                    result = working[0].toUpperCase() + '7#5♭9';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(tritone) && int_in_chord.includes(minor7) && int_in_chord.includes(minor2)){
+                    found = true;
+                    result = working[0].toUpperCase() + '7♭5♭9';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + '13';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min/maj9';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min/maj11';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min/maj13';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major6) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + '6/9';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major6) && int_in_chord.includes(major2)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm6/9';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj11';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm11';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm13';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(tritone)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj7#11';
+                }  else if(int_in_chord.includes(major3) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj13 (no 5th)';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj11 (no 5th)';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(minor7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + '11 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min/maj11 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min/maj13 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min/maj13 (no 5th)';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj13 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm11 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7) && int_in_chord.includes(major2) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm13 (no 5th)';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(minor7) && int_in_chord.includes(perfect4) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm13';
+        
+                } else {
+                    working.push(working.shift());
+                    tries++;
+                    if (tries >= working.length) {
+                        found = true;
+                    }
+                }
     }
-
-    //display history
-    let input_and_result = document.createElement('p');
-    notes_str = notes_str.toUpperCase();
-    let result_str = result.toString();
-    notes_str = notes_str.replaceAll(',', ' ');
-    input_and_result.innerHTML = notes_str + ' = ' + result_str;
-    document.getElementById('history').insertBefore(input_and_result, document.getElementById('history').children[2]);
 
     return result;
 }
 
-//This function calculates the chord based off of six notes
 function six_notes(notes) {
-    let int_in_chord = [];
+    const working = normalizeNotes(notes);
     let result = 'Not Found';
     let tries = 0;
-    let key_sig;
-    let notes_str = notes.toString();
+    let found = false;
 
-    for (let i=0; i < notes.length; i++){
-        notes[i] = notes[i].toLowerCase();
-    }
-
-    while (chord_found == false){
-        let note1 = notes[0].toLowerCase();
-        let note2 = notes[1].toLowerCase();
-        let note3 = notes[2].toLowerCase();
-        let note4 = notes[3].toLowerCase();
-        let note5 = notes[4].toLowerCase();
-        let note6 = notes[5].toLowerCase();
-
-        switch(notes[0]) {
-            case 'c':
-                key_sig = key_c;
-                break;
-            case 'b#':
-                key_sig = key_c;
-                break;
-            case 'g':
-                key_sig = key_g;
-                break;
-            case 'd':
-                key_sig = key_d;
-                break;
-            case 'a':
-                key_sig = key_a;
-                break;
-            case 'e':
-                key_sig = key_e;
-                break;
-            case 'f♭':
-                key_sig = key_e;
-                break;
-            case 'b':
-                key_sig = key_b;
-                break;
-            case 'c♭':
-                key_sig = key_b;
-                break;
-            case 'g♭':
-                key_sig = key_gb;
-                break;
-            case 'f#':
-                key_sig = key_gb;
-                break;
-            case 'd♭':
-                key_sig = key_db;
-                break;
-            case 'c#':
-                key_sig = key_db;
-                break;
-            case 'a♭':
-                key_sig = key_ab;
-                break;
-            case 'g#':
-                key_sig = key_ab;
-                break;
-            case 'e♭':
-                key_sig = key_eb;
-                break;
-            case 'd#':
-                key_sig = key_eb;
-                break;
-            case 'b♭':
-                key_sig = key_bb;
-                break;
-            case 'a#':
-                key_sig = key_bb;
-                break;
-            case 'f':
-                key_sig = key_f;
-                break;
-            case 'e#':
-                key_sig = key_f;
-                break;
+    while (!found) {
+        const keySig = getKeySignature(working[0]);
+        if (!keySig) {
+            return 'Invalid note';
         }
 
-        var num_note1 = key_sig[note1];
-        var num_note2 = key_sig[note2];
-        var num_note3 = key_sig[note3];
-        var num_note4 = key_sig[note4];
-        var num_note5 = key_sig[note5];
-        var num_note6 = key_sig[note6];
-        var int1and2 = num_note2 - num_note1;
-        var int1and3 = num_note3 - num_note1;
-        var int1and4 = num_note4 - num_note1;
-        var int1and5 = num_note5 - num_note1;
-        var int1and6 = num_note6 - num_note1;
-
-        int_in_chord.push(int1and2, int1and3, int1and4, int1and5, int1and6);
+        const int_in_chord = getIntervals(keySig, working);
+        if (!int_in_chord) {
+            return 'Invalid note';
+        }
 
         if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj13';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj11';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + '11';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min/maj11';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min/maj13';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'min/maj13';
-        } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'maj13';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm11';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(major2) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm13';
-        } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(perfect4) && int_in_chord.includes(major6)){
-            chord_found = true;
-            result = note1.toUpperCase() + 'm13';
-        } else {
-            int_in_chord = [];
-            notes.push(notes.shift());
-            tries++;
-            if(tries == notes.length) {
-                chord_found = true;
-            }
-        }
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj13';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj11';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + '11';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min/maj11';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min/maj13';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(perfect4) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'min/maj13';
+                } else if(int_in_chord.includes(major3) && int_in_chord.includes(perfect5) && int_in_chord.includes(major7) && int_in_chord.includes(major2) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'maj13';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(major2) && int_in_chord.includes(perfect4)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm11';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(major2) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm13';
+                } else if(int_in_chord.includes(minor3) && int_in_chord.includes(perfect5) && int_in_chord.includes(minor7) && int_in_chord.includes(perfect4) && int_in_chord.includes(major6)){
+                    found = true;
+                    result = working[0].toUpperCase() + 'm13';
+                } else {
+                    working.push(working.shift());
+                    tries++;
+                    if (tries >= working.length) {
+                        found = true;
+                    }
+                }
     }
-    
-    //display history
-    let input_and_result = document.createElement('p');
-    notes_str = notes_str.toUpperCase();
-    let result_str = result.toString();
-    notes_str = notes_str.replaceAll(',', ' ');
-    input_and_result.innerHTML = notes_str + ' = ' + result_str;
-    document.getElementById('history').insertBefore(input_and_result, document.getElementById('history').children[2]);
-    
+
     return result;
 }
 
-//Clear history
 function clearHistory() {
-    let remove_element = document.getElementById('history');
-    for(let i = remove_element.children.length; i > 2; i--){
-        remove_element.removeChild(remove_element.lastElementChild);
-    }
+    historyListEl.replaceChildren();
 }
+
+function init() {
+    resultEl = document.getElementById('result');
+    historyListEl = document.getElementById('history-list');
+
+    document.getElementById('clear').addEventListener('click', clearScreen);
+    document.getElementById('backspace').addEventListener('click', backspace);
+    document.getElementById('equals').addEventListener('click', calculate);
+    document.getElementById('clear_history').addEventListener('click', clearHistory);
+
+    document.querySelectorAll('#calculator .note').forEach((button) => {
+        button.addEventListener('click', () => display(' ' + button.value));
+    });
+
+    document.getElementById('flat').addEventListener('click', () => display('♭'));
+    document.getElementById('sharp').addEventListener('click', () => display('#'));
+}
+
+document.addEventListener('DOMContentLoaded', init);
