@@ -1,93 +1,101 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/html" dir="ltr">
+<html lang="en" dir="ltr">
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="theme-color" content="#0c0c10">
         <title>Chord Calculator</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="styles.css">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
     </head>
     <body>
 
-        <div id="header">
-            <h1>Chord Calculator</h1>
-            <p>Enter up to six notes</p>
-        </div>
+        <header id="header">
+            <div class="header-inner">
+                <div class="header-brand">
+                    <span class="header-icon" aria-hidden="true">♫</span>
+                    <div>
+                        <h1>Chord Calculator</h1>
+                        <p>Enter up to six notes — lowest note first</p>
+                    </div>
+                </div>
+            </div>
+        </header>
 
-        <div id="main-content">
+        <main id="main-content">
 
-            <div id="side-bar">
-                <div id="note-section">
-                    <h3>Notes:</h3>
-                    <hr>
-                    
-                    <ul style="margin: 0; width: 90%;">
-                        <li>This calculator currently does not support double flats or double sharps</li>
-                        <li>Some chords can have more than one name depending on the context in which they are used, this calculator tries to identify the chord based off of the first note entered, if no chord is found, it cycles through the rest of the notes until a match is found. </li>
-                        <li>There may be some chords missing, if you enter a chord and it is not recognized, please email us the list of notes entered!</li>
+            <aside id="side-bar">
+                <div id="note-section" class="panel">
+                    <h3>Notes</h3>
+                    <ul class="note-list">
+                        <li>This calculator currently does not support double flats or double sharps.</li>
+                        <li>Some chords can have more than one name depending on context. This calculator identifies chords based on the first note entered; if no match is found, it cycles through the remaining notes.</li>
+                        <li>Some chords may be missing. If you enter a chord that isn't recognized, please email us the list of notes!</li>
                     </ul>
-
-                    <hr>
                 </div>
 
-                <form id='contact-form' action="mailto:josephtstuckey@gmail.com" method="post" enctype="text/plain">
+                <form id="contact-form" class="panel" action="mailto:josephtstuckey@gmail.com" method="post" enctype="text/plain">
                     <h3>Contact Us</h3>
-                    <input type="text" id="name" name='name' placeholder="Your Name" required>
-                    <input type="email" id="email" name='email' placeholder="Your Email" required>
-                    <textarea id="message" name="message"></textarea>
-                    <button type="submit" id='form-submit' class="button operation-button">Send</button>
+                    <input type="text" id="name" name="name" placeholder="Your name" required>
+                    <input type="email" id="email" name="email" placeholder="Your email" required>
+                    <textarea id="message" name="message" placeholder="Your message…"></textarea>
+                    <button type="submit" id="form-submit" class="button operation-button">Send Message</button>
                 </form>
-                
-            </div>
+            </aside>
 
-            <div id="calculator">
-                <input type="text" id="result" class="display-box" placeholder="Lowest Note First" disabled>
-                <input type='button' accessKey='a' value="A" class="button note" id="a" onclick="display(' A')">
-                <input type='button' accessKey='b' value="B" class="button note" id="b" onclick="display(' B')">
-                <input type='button' accessKey='c' value="C" class="button note" id="c" onclick="display(' C')">
-                <input type="button" accessKey='delete' value='Clear' class='button operation-button' id="clear" onclick="clearScreen()">
-                <input type='button' accessKey='d' value="D" class="button note" id="d" onclick="display(' D')">
-                <input type='button' accessKey='e' value="E" class="button note" id="e" onclick="display(' E')">
-                <input type='button' accessKey='f' value="F" class="button note" id="f" onclick="display(' F')">
-                <input type="button" accessKey='backspace' class='button operation-button' id="backspace" value="Back" onclick="backspace()">
-                <input type='button' accessKey='@' value='♭' class='button accidental' id="flat" onclick="backspace; display('♭')">
-                <input type='button' accessKey='g' value="G" class="button note" id="g" onclick="display(' G')">
-                <input type="button" accessKey='#' value="#" class='button accidental' id="sharp" onclick="backspace; display('#')">
-                <input type="button" accessKey='enter' value="=" class="button operation-button" id="equals" onclick="calculate()">
-            </div>
+            <section id="calculator" class="panel" aria-label="Chord calculator keypad">
+                <input type="text" id="result" class="display-box" placeholder="Lowest note first" disabled>
+                <input type="button" accessKey="a" value="A" class="button note" id="a" onclick="display(' A')">
+                <input type="button" accessKey="b" value="B" class="button note" id="b" onclick="display(' B')">
+                <input type="button" accessKey="c" value="C" class="button note" id="c" onclick="display(' C')">
+                <input type="button" accessKey="delete" value="Clear" class="button operation-button" id="clear" onclick="clearScreen()">
+                <input type="button" accessKey="d" value="D" class="button note" id="d" onclick="display(' D')">
+                <input type="button" accessKey="e" value="E" class="button note" id="e" onclick="display(' E')">
+                <input type="button" accessKey="f" value="F" class="button note" id="f" onclick="display(' F')">
+                <input type="button" accessKey="backspace" class="button operation-button" id="backspace" value="Back" onclick="backspace()">
+                <input type="button" accessKey="@" value="♭" class="button accidental" id="flat" onclick="backspace; display('♭')">
+                <input type="button" accessKey="g" value="G" class="button note" id="g" onclick="display(' G')">
+                <input type="button" accessKey="#" value="#" class="button accidental" id="sharp" onclick="backspace; display('#')">
+                <input type="button" accessKey="enter" value="=" class="button operation-button" id="equals" onclick="calculate()">
+            </section>
 
-            <div id="history-box">
-                <div id="history" class="display-box">
+            <section id="history-box">
+                <div id="history" class="display-box panel">
                     <h2 id="history-header">History</h2>
-                    <hr>
+                    <hr class="history-divider">
                 </div>
-                <input type="button" class='button operation-button' name="clear_history" id="clear_history" value="Clear History" onclick="clearHistory()">
-            </div>
-        </div>        
+                <input type="button" class="button operation-button" name="clear_history" id="clear_history" value="Clear History" onclick="clearHistory()">
+            </section>
+        </main>
 
         <footer>
             <div id="footer-container">
-                <div id='footer-left'>
+                <div id="footer-left">
                     <form action="https://www.paypal.com/donate" method="post" target="_top" id="donate">
-                        <input type="hidden" name="business" value="34TJSK297F2CL" />
-                        <input type="hidden" name="no_recurring" value="0" />
-                        <input type="hidden" name="currency_code" value="USD" />
-                        <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
-                        <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
-                    </form>  
-                </div>                      
+                        <input type="hidden" name="business" value="34TJSK297F2CL">
+                        <input type="hidden" name="no_recurring" value="0">
+                        <input type="hidden" name="currency_code" value="USD">
+                        <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button">
+                        <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+                    </form>
+                </div>
                 <div id="footer-right">
                     <div class="hit-counter">
-                        <p>Unique: </p><a href="https://www.hitwebcounter.com" target="_blank"></a>
-                        <img src="https://hitwebcounter.com/counter/counter.php?page=8042452&style=0008&nbdigits=5&type=ip&initCount=0" title="Free Counter" Alt="web counter"   border="0" />      
-                    </div>      
+                        <p>Unique</p>
+                        <a href="https://www.hitwebcounter.com" target="_blank"></a>
+                        <img src="https://hitwebcounter.com/counter/counter.php?page=8042452&style=0008&nbdigits=5&type=ip&initCount=0" title="Free Counter" alt="web counter" border="0">
+                    </div>
                     <div class="hit-counter">
-                        <!-- hitwebcounter Code START -->
-                        <p>Total: </p><a href="https://www.hitwebcounter.com" target="_blank"></a>  
-                        <img src="https://hitwebcounter.com/counter/counter.php?page=8042454&style=0008&nbdigits=5&type=page&initCount=0" title="Free Counter" Alt="web counter"   border="0" />      
-                    </div>                  
+                        <p>Total</p>
+                        <a href="https://www.hitwebcounter.com" target="_blank"></a>
+                        <img src="https://hitwebcounter.com/counter/counter.php?page=8042454&style=0008&nbdigits=5&type=page&initCount=0" title="Free Counter" alt="web counter" border="0">
+                    </div>
                 </div>
             </div>
         </footer>
+
         <script src="https://smtpjs.com/v3/smtp.js"></script>
         <script type="text/javascript" src="script.js"></script>
     </body>
